@@ -1,0 +1,173 @@
+<!doctype html>
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src="/resources/check-layout-th.js"></script>
+<link rel='stylesheet' href='../support/base.css' />
+<link rel="author" title="Aleks Totic" href="atotic@chromium.org" />
+<link rel="help" href="https://drafts.csswg.org/css-tables-3/#row-layout" />
+<style>
+  table {
+    border-collapse: collapse;
+    background: #DDD;
+    height: 100px;
+  }
+  td {
+    padding: 0;
+  }
+  table tbody:nth-child(1) {
+    background: #CCC;
+  }
+  table tbody:nth-child(2) {
+    background: #AAA;
+  }
+  table tbody:nth-child(3) {
+    background: #999;
+  }
+  table thead {
+    background: rgba(0,255,0,0.3);
+  }
+  table tfoot {
+    background: rgba(255,255,0,0.3);
+  }
+
+</style>
+<h1>Tests for redistribution of table height to row group height.</h1>
+<li>Edge 17 passes most of the tests
+<p>1) Empty sections and rows do grow.</p>
+<p>Do we really want this?</p>
+<table id="one" style="height:100px">
+  <tbody data-expected-height="0">
+    <tr data-expected-height="0"></tr>
+  </tbody>
+</table>
+<p>2) Empty rows do not grow when redistributed from row group css height.</p>
+<table id="two" style="height:auto">
+  <tbody style="height: 100px" data-expected-height="0">
+    <tr data-expected-height="0"></tr>
+  </tbody>
+</table>
+
+<p>3) Unconstrained sections grow proportionally.</p>
+<p>Chrome only grows first TBODY. This test expects only TBODYs to grow.</p>
+<table id="three" style="height:100px">
+  <thead data-expected-height="15">
+    <tr><td><div style="height:15px">0,0</div></td></tr>
+  </thead>
+  <tbody data-expected-height="35">
+    <tr><td>1,0</td></tr>
+  </tbody>
+  <tbody data-expected-height="35">
+    <tr><td>2,0</td></tr>
+  </tbody>
+  <tfoot data-expected-height="15">
+    <tr><td><div style="height:15px">3,0</div></td></tr>
+  </tfoot>
+</table>
+
+<p>4) Unconstrained sections grow proportionally to their size</p>
+<table id="four">
+  <tbody data-expected-height="75">
+    <tr><td>0,0</td></tr>
+    <tr><td>1,0</td></tr>
+    <tr><td>2,0</td></tr>
+  </tbody>
+  <tbody data-expected-height="25">
+    <tr><td>3,0</td></tr>
+  </tbody>
+</table>
+
+<p>5) Fixed sections do not grow if there are unconstrained sections.</p>
+<p>FF gets the right sizes, but gets locations wrong.</p>
+<table id="five" style="height:100px">
+  <tbody style="height:30px" data-expected-height="30" data-offset-y="0">
+    <tr><td>0,0</td></tr>
+  </tbody>
+  <tbody data-expected-height="35" data-offset-y="30">
+    <tr><td>1,0</td></tr>
+  </tbody>
+  <tbody data-expected-height="35" data-offset-y="65">
+    <tr><td>2,0</td></tr>
+  </tbody>
+</table>
+
+<p>6) Fixed sections grow proportionally to their height.</p>
+<p>FF grows sections equally, not proportionally to height</p>
+<table id="six" style="height:100px">
+  <tbody style="height:20px" data-expected-height="25">
+    <tr><td>0,0</td></tr>
+  </tbody>
+  <tbody style="height:60px" data-expected-height="75">
+    <tr><td>1,0</td></tr>
+  </tbody>
+</table>
+
+<p>7) Percentage resolution size. Initial percentage resolution size should be undefined.
+<table id="seven">
+  <tbody style="height:30%" data-expected-height="20">
+    <tr><td><div style="height:20px">0,0</div></td></tr>
+  </tbody>
+  <tbody style="height:70%" data-expected-height="20">
+    <tr><td><div style="height:20px">1,0</div></td></tr>
+  </tbody>
+  <tbody style="height:200px" data-expected-height="200">
+    <tr><td>1,0</td></tr>
+  </tbody>
+</table>
+
+<p>8) Percentage resolution size. During table height redistribution, use table height as
+  percentage resolution height..
+<table id="eight">
+  <tbody style="height:30%" data-expected-height="30">
+    <tr><td><div style="height:20px">0,0</div></td></tr>
+  </tbody>
+  <tbody style="height:70%" data-expected-height="70">
+    <tr><td><div style="height:20px">1,0</div></td></tr>
+  </tbody>
+</table>
+
+<p>9) Redistribute percentage bodies proportional to their initial height
+<table id="nine">
+  <tbody style="height:20%" data-expected-height="25">
+    <tr><td><div style="height:20px">0,0</div></td></tr>
+  </tbody>
+  <tbody style="height:60%" data-expected-height="75">
+    <tr><td><div style="height:20px">1,0</div></td></tr>
+  </tbody>
+</table>
+
+<p>10) Table min-height is not ignored.</p>
+<table id="ten" style="min-height:200px;height:auto" data-expected-height="200">
+  <tbody>
+    <tr><td><div style="height:50px">0,0</div></td></tr>
+  </tbody>
+</table>
+
+<p>11) Table max-height is ignored.</p>
+<table id="eleven" style="max-height:90px;height:auto" data-expected-height="100">
+  <tbody>
+    <tr><td><div style="height:100px">0,0</div></td></tr>
+  </tbody>
+</table>
+
+<p>12) Table height does not include caption</p>
+<table id="twelve" style="height:100px;" >
+  <caption>not included</caption>
+  <tbody>
+    <tr data-expected-height="100"><td>0,0</td></tr>
+  </tbody>
+</table>
+
+<script>
+  checkLayout("#one tbody, #one tr", false);
+  checkLayout("#two tbody, #two tr", false);
+  checkLayout("#three thead, #three tbody, #three tfoot", false);
+  checkLayout("#four tbody", false);
+  checkLayout("#five tbody", false);
+  checkLayout("#six tbody", false);
+  checkLayout("#seven tbody", false);
+  checkLayout("#eight tbody", false);
+  checkLayout("#nine tbody", false);
+  checkLayout("#ten", false);
+  checkLayout("#eleven");
+  checkLayout("#twelve tr");
+</script>
