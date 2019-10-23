@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<fieldset style="display: -webkit-box">
+  <div id="child"></div>
+</fieldset>
+<script>
+  test(function() {
+    var child = document.getElementById("child");
+    assert_greater_than(child.offsetWidth, 0);
+  }, "Child of fieldset should fill width.");
+</script>
